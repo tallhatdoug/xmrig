@@ -1,0 +1,72 @@
+[2026-10-30 23:24:30.680]  net      Block candidates: enabled rpc=https://monero.ceo:18090/get_info refresh=30s max-stale=120s
+ * ABOUT        XMRig/6.26.0 gcc/14.2.0 (built for Linux x86-64, 64 bit)
+ * LIBS         libuv/1.50.0 OpenSSL/3.5.7 hwloc/2.12.0
+ * HUGE PAGES   supported
+ * 1GB PAGES    unavailable
+ * CPU          DO-Regular (1) 64-bit AES VM
+                L2:8.0 MB L3:0.0 MB 2C/2T NUMA:1
+ * MEMORY       0.8/1.9 GB (42%)
+                DIMM 0: 2 GB RAM @ 0 MHz DIMM 0
+ * MOTHERBOARD  DigitalOcean - Droplet
+ * DONATE       0%
+ * ASSEMBLY     auto:intel
+ * POOL #1      tallhatdoug.com:8888 algo rx/0
+ * COMMANDS     'h' hashrate, 'p' pause, 'r' resume, 's' results, 'c' connection
+ * OPENCL       disabled
+ * CUDA         disabled
+[2026-10-30 23:24:30.698]  net      [netdiff] ready height=3795725 difficulty=797604623118 nettype=mainnet
+[2026-10-30 23:24:30.706]  net      use pool tallhatdoug.com:8888 TLSv1.3 165.227.89.71
+[2026-10-30 23:24:30.706]  net      fingerprint (SHA-256): "c61114e5a510935a4535c3489c4e9d85b5b9711c17f3887a520b7757070ea9df"
+[2026-10-30 23:24:30.706]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795725 (36 tx)
+[2026-10-30 23:24:30.706]  cpu      use argon2 implementation AVX2
+[2026-10-30 23:24:30.706]  msr      cannot read MSR 0x000001a4
+[2026-10-30 23:24:30.706]  msr      FAILED TO APPLY MSR MOD, HASHRATE WILL BE LOW
+[2026-10-30 23:24:30.706]  randomx  init dataset algo rx/0 (2 threads) seed 8dfdff67d274c53c...
+[2026-10-30 23:24:30.707]  randomx  not enough memory for RandomX dataset
+[2026-10-30 23:24:30.780]  randomx  failed to allocate RandomX dataset, switching to slow mode (74 ms)
+[2026-10-30 23:24:31.325]  randomx  dataset ready (544 ms)
+[2026-10-30 23:24:31.325]  cpu      use profile  rx  (2 threads) scratchpad 2048 KB
+[2026-10-30 23:24:31.328]  cpu      READY threads 2/2 (2) huge pages 100% 2/2 memory 4096 KB (3 ms)
+[2026-10-30 23:24:35.802]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795725 (38 tx)
+[2026-10-30 23:24:45.805]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795725 (40 tx)
+[2026-10-30 23:24:55.809]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795725 (43 tx)
+[2026-10-30 23:25:05.814]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795725 (45 tx)
+[2026-10-30 23:25:15.816]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795725 (46 tx)
+[2026-10-30 23:25:25.853]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795725 (49 tx)
+[2026-10-30 23:25:31.401]  miner    speed 10s/60s/15m 79.94 n/a n/a H/s max 83.20 H/s
+[2026-10-30 23:25:35.857]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795725 (51 tx)
+[2026-10-30 23:25:45.861]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795725 (56 tx)
+[2026-10-30 23:25:55.864]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795725 (59 tx)
+[2026-10-30 23:26:05.870]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795725 (62 tx)
+[2026-10-30 23:26:13.978]  cpu      accepted (1/0) diff 20000 (52 ms)
+[2026-10-30 23:26:15.872]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795725 (63 tx)
+[2026-10-30 23:26:25.878]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795725 (68 tx)
+ - CONNECTION
+ * pool address     tallhatdoug.com:8888 (165.227.89.71) TLSv1.3
+ * algorithm        rx/0
+ * difficulty       20000
+ * ping time        52ms
+ * connection time  120s
+ - RESULTS
+ * accepted         1 (100.0%)
+ * pool-side hashes 20000 avg 20000
+ * difficulty       20000
+ * avg result time  120.3s
+ - TOP 10
+  # | DIFFICULTY | EFFORT % |
+  1 |      23401 |    85.47 |
+[2026-10-30 23:26:31.463]  miner    speed 10s/60s/15m 73.61 77.53 n/a H/s max 84.34 H/s
+[2026-10-30 23:26:35.881]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795725 (71 tx)
+[2026-10-30 23:26:42.405]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795726 (4 tx)
+[2026-10-30 23:26:42.422]  net      [netdiff] ready height=3795726 difficulty=798387283930 nettype=mainnet
+[2026-10-30 23:26:52.889]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795726 (5 tx)
+[2026-10-30 23:27:02.889]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795726 (8 tx)
+[2026-10-30 23:27:12.886]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795726 (12 tx)
+[2026-10-30 23:27:22.890]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795726 (13 tx)
+[2026-10-30 23:27:31.531]  miner    speed 10s/60s/15m 79.71 76.58 n/a H/s max 84.34 H/s
+[2026-10-30 23:27:32.890]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795726 (15 tx)
+[2026-10-30 23:27:42.889]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795726 (21 tx)
+[2026-10-30 23:28:02.897]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795726 (24 tx)
+[2026-10-30 23:28:12.950]  net      new job from tallhatdoug.com:8888 diff 20000 algo rx/0 height 3795726 (27 tx)
+[2026-10-30 23:28:20.277]  signal   Ctrl+C received, exiting
+[2026-10-30 23:28:20.295]  cpu      stopped (17 ms)

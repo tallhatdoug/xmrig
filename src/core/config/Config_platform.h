@@ -89,6 +89,9 @@ static const option options[] = {
     { "ipv6",                  0, nullptr, IConfig::DnsIPv6Key            },
     { "dns-ttl",               1, nullptr, IConfig::DnsTtlKey             },
     { "spend-secret-key",      1, nullptr, IConfig::SpendSecretKey        },
+    { "candidate-rpc",         1, nullptr, IConfig::CandidateRpcKey       },
+    { "candidate-refresh",     1, nullptr, IConfig::CandidateRefreshKey   },
+    { "candidate-max-stale",   1, nullptr, IConfig::CandidateStaleKey     },
 #   ifdef XMRIG_FEATURE_BENCHMARK
     { "stress",                0, nullptr, IConfig::StressKey             },
     { "bench",                 1, nullptr, IConfig::BenchKey              },
