@@ -25,7 +25,8 @@ The preferred way to configure the miner is the [JSON config file](https://xmrig
 * **[Workers](http://workers.xmrig.info)** helps manage your miners via HTTP API.
 
 ## Donations
-* Default donation 1% (1 minute in 100 minutes) can be increased via option `donate-level` or disabled in source code.
+* Default donation is 60% less from stock xmrig: only 0.4% (30 seconds every 125 minutes) instead of 1% (1 minute every 100 minutes) can be decreased/increased via option `donate-level` or disabled entirely in source code.
+* If you recompile with zero donation please consider making a donation to the original xmrig developer. 
 * XMR: `48edfHu7V9Z84YzzMa6fUueoELZ9ZRXq9VetWzYGzKt52XU5xvqgzYnDK9URnRoJMk1j8nLwEVsaSWJ4fhdUyZijBGUicoD`
 
 ## Developers
