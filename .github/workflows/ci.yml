@@ -57,10 +57,6 @@ jobs:
         run: |
           brew install cmake libuv openssl hwloc
 
-      - name: Install Windows dependencies
-        if: runner.os == 'Windows'
-        run: choco install cmake openssl hwloc
-
       - name: Configure
         shell: bash
         run: |
@@ -100,11 +96,12 @@ jobs:
             cp "build/${{ matrix.artifact }}" dist/
           fi
           cp doc/FORK_FEATURES.md dist/
-          cd dist
           if [[ "${{ matrix.package }}" == *.zip ]]; then
-            7z a "${{ matrix.package }}" .
+            7z a "../${{ matrix.package }}" .
+            cd ..
           else
-            tar -czf "${{ matrix.package }}" .
+            tar -czf "../${{ matrix.package }}" .
+            cd ..
           fi
           sha256sum "${{ matrix.package }}" > "${{ matrix.package }}.sha256"
           cat "${{ matrix.package }}.sha256"
@@ -113,5 +110,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}
-          path: dist/*
+          path: |
+            *.tar.gz
+            *.tar.gz.sha256
+            *.zip
+            *.zip.sha256
           if-no-files-found: error
