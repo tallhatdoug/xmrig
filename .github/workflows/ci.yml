@@ -13,77 +13,9 @@ permissions:
   contents: read
 
 jobs:
-  windows-deps:
-    name: prepare-windows-dependencies
-    runs-on: windows-2022
-    outputs:
-      deps-prefix: ${{ steps.paths.outputs.deps-prefix }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Set paths
-        id: paths
-        shell: pwsh
-        run: |
-          "deps-prefix=$env:RUNNER_WORKSPACE\deps" |
-            Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
-      - name: Download and build dependencies
-        shell: bash
-        run: |
-          set -euxo pipefail
-          DEPS="${{ steps.paths.outputs.deps-prefix }}"
-          mkdir -p "$DEPS/src" "$DEPS/prefix"
-
-          cd "$DEPS/src"
-          curl -fL -o libuv.tar.gz \
-            https://github.com/libuv/libuv/archive/refs/tags/v1.51.0.tar.gz
-          curl -fL -o hwloc.tar.gz \
-            https://download.open-mpi.org/release/hwloc/v2.12/hwloc-2.12.2.tar.gz
-
-          tar -xzf libuv.tar.gz
-          tar -xzf hwloc.tar.gz
-
-          cmake -S libuv-1.51.0 -B libuv-build \
-            -G "Visual Studio 17 2022" -A x64 \
-            -DCMAKE_INSTALL_PREFIX="$DEPS/prefix" \
-            -DBUILD_TESTING=OFF
-          cmake --build libuv-build --config Release --target install
-
-          cd hwloc-2.12.2
-          ./configure \
-            --prefix="$DEPS/prefix" \
-            --disable-shared \
-            --enable-static \
-            --disable-cairo \
-            --disable-libxml2 \
-            --disable-pci \
-            --disable-opencl \
-            --disable-cuda \
-            --disable-nvml \
-            --disable-rsmi
-          make -j2
-          make install
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.paths.outputs.deps-prefix }}/prefix
-          key: windows-deps-v1
-
-      - name: Upload dependency logs
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: windows-deps-log
-          path: ${{ steps.paths.outputs.deps-prefix }}/src
-          if-no-files-found: ignore
-
   build:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
-    needs: windows-deps
     strategy:
       fail-fast: false
       matrix:
@@ -125,28 +57,39 @@ jobs:
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
         run: |
-          brew install cmake libuv hwloc 2>&1 | tee build.log
+          brew install cmake libuv openssl hwloc 2>&1 | tee build.log
 
-      - name: Restore Windows dependencies
+      - name: Build Windows dependencies
         if: runner.os == 'Windows'
-        uses: actions/cache/restore@v4
-        with:
-          path: ${{ runner.workspace }}/deps/prefix
-          key: windows-deps-v1
-          fail-on-cache-miss: true
+        shell: bash
+        run: |
+          {
+            set -euxo pipefail
+            export DEPS="$(cygpath -u '${{ runner.workspace }}/deps')"
+            mkdir -p "$DEPS"
+
+            export UV_ROOT="$DEPS/uv"
+            export OPENSSL_ROOT_DIR="$DEPS/openssl"
+            export HWLOC_ROOT="$DEPS/hwloc"
+
+            ./scripts/build.uv.sh
+            ./scripts/build.openssl3.sh
+            ./scripts/build.hwloc.sh
+          } 2>&1 | tee build.log
 
       - name: Configure
         shell: bash
         run: |
           {
             if [[ "${{ runner.os }}" == "Windows" ]]; then
-              DEPS="$(cygpath -u '${{ runner.workspace }}/deps/prefix')"
+              export DEPS="$(cygpath -u '${{ runner.workspace }}/deps')"
+              export UV_ROOT="$DEPS/uv"
+              export OPENSSL_ROOT_DIR="$DEPS/openssl"
+              export HWLOC_ROOT="$DEPS/hwloc"
+
               cmake -S . -B build \
+                -G "Visual Studio 17 2022" -A x64 \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DUV_INCLUDE_DIR="$DEPS/include" \
-                -DUV_LIBRARY="$DEPS/lib/uv_a.lib" \
-                -DHWLOC_INCLUDE_DIR="$DEPS/include" \
-                -DHWLOC_LIBRARY="$DEPS/lib/libhwloc.a" \
                 -DWITH_CN_LITE=OFF \
                 -DWITH_CN_HEAVY=OFF \
                 -DWITH_CN_PICO=OFF \
