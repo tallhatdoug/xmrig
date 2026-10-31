@@ -23,16 +23,23 @@
 
 
 /*
- * Fork donation scheduler.
- *
+ * Fork uses slightly different variable-length donation scheduler;
  * donate-level uses 0.2% units. Every donation burst lasts 30 seconds:
  *
- *   level 1: 30 seconds per 250 minutes (0.2%)
+ *   level 1: 30 seconds per 250 minutes (0.2%, lowest configurable value without recompiling to 0)
  *   level 2: 30 seconds per 125 minutes (0.4%, default)
+ *   ............
  *   level 5: 30 seconds per 50 minutes  (1.0%)
+ * 
+ *  Structuring it this way enables 2 major changes: 1) donation mining bursts are only 30 seconds instead of 60 seconds
+ *  2) the user, without recompiling our release, can enjoy 60% lower fees by default, and configure it to 80% lower fees   
+ *  compared to the original stock xmrig. 
  *
- * The randomized scheduling behavior is retained. Set donate-level to 0 to
+ * Set donate-level to 0 to
  * disable donation mining entirely.
+ * 
+ * If you disable/recompile, please consider a one-off XMR donation 
+ * to the original XMRig developer: 48edfHu7V9Z84YzzMa6fUueoELZ9ZRXq9VetWzYGzKt52XU5xvqgzYnDK9URnRoJMk1j8nLwEVsaSWJ4fhdUyZijBGUicoD
  */
 constexpr const int kDefaultDonateLevel = 2;
 constexpr const uint64_t kDonationBurstSeconds = 30;
@@ -42,7 +49,7 @@ inline uint64_t donationIdleSeconds(int level)
 {
     return level > 0 ? kDonationCycleSeconds / static_cast<uint64_t>(level) - kDonationBurstSeconds : 0;
 }
-constexpr const int kMinimumDonateLevel = 0;
+constexpr const int kMinimumDonateLevel = 1;
 
 
 #endif // XMRIG_DONATE_H
