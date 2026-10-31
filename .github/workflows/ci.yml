@@ -66,15 +66,49 @@ jobs:
           {
             set -euxo pipefail
             export DEPS="$(cygpath -u '${{ runner.workspace }}/deps')"
-            mkdir -p "$DEPS"
-
             export UV_ROOT="$DEPS/uv"
             export OPENSSL_ROOT_DIR="$DEPS/openssl"
             export HWLOC_ROOT="$DEPS/hwloc"
 
-            ./scripts/build.uv.sh
-            ./scripts/build.openssl3.sh
-            ./scripts/build.hwloc.sh
+            mkdir -p "$DEPS/src" "$UV_ROOT" "$OPENSSL_ROOT_DIR" "$HWLOC_ROOT"
+            cd "$DEPS/src"
+
+            curl -fL -o uv.tar.gz \
+              https://dist.libuv.org/dist/v1.51.0/libuv-v1.51.0.tar.gz
+            tar -xzf uv.tar.gz
+            cmake -S libuv-v1.51.0 -B uv-build \
+              -G "Visual Studio 17 2022" -A x64 \
+              -DCMAKE_INSTALL_PREFIX="$UV_ROOT" \
+              -DBUILD_TESTING=OFF
+            cmake --build uv-build --config Release --target install
+
+            curl -fL -o openssl.tar.gz \
+              https://github.com/openssl/openssl/releases/download/openssl-3.5.2/openssl-3.5.2.tar.gz
+            tar -xzf openssl.tar.gz
+            cd openssl-3.5.2
+            perl Configure VC-WIN64A no-shared no-tests \
+              --prefix="$OPENSSL_ROOT_DIR"
+            nmake
+            nmake install_sw
+            cd ..
+
+            curl -fL -o hwloc.tar.gz \
+              https://download.open-mpi.org/release/hwloc/v2.12/hwloc-2.12.2.tar.gz
+            tar -xzf hwloc.tar.gz
+            cd hwloc-2.12.2
+            ./configure \
+              --prefix="$HWLOC_ROOT" \
+              --disable-shared \
+              --enable-static \
+              --disable-cairo \
+              --disable-libxml2 \
+              --disable-pci \
+              --disable-opencl \
+              --disable-cuda \
+              --disable-nvml \
+              --disable-rsmi
+            make -j2
+            make install
           } 2>&1 | tee -a build.log
 
       - name: Configure
@@ -90,6 +124,11 @@ jobs:
               cmake -S . -B build \
                 -G "Visual Studio 17 2022" -A x64 \
                 -DCMAKE_BUILD_TYPE=Release \
+                -DUV_INCLUDE_DIR="$UV_ROOT/include" \
+                -DUV_LIBRARY="$UV_ROOT/lib/uv_a.lib" \
+                -DOPENSSL_ROOT_DIR="$OPENSSL_ROOT_DIR" \
+                -DHWLOC_INCLUDE_DIR="$HWLOC_ROOT/include" \
+                -DHWLOC_LIBRARY="$HWLOC_ROOT/lib/libhwloc.lib" \
                 -DWITH_CN_LITE=OFF \
                 -DWITH_CN_HEAVY=OFF \
                 -DWITH_CN_PICO=OFF \
