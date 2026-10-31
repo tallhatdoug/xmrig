@@ -23,6 +23,8 @@
 
 
 #include "core/config/Config.h"
+#include "core/config/CandidateConfig.h"
+#include "base/io/json/Json.h"
 #include "3rdparty/rapidjson/document.h"
 #include "backend/cpu/Cpu.h"
 #include "base/io/log/Log.h"
@@ -77,6 +79,7 @@ class ConfigPrivate
 {
 public:
     bool pauseOnBattery = false;
+    CandidateConfig candidate;
     CpuConfig cpu;
     uint32_t idleTime   = 0;
 
@@ -129,6 +132,12 @@ xmrig::Config::~Config()
 bool xmrig::Config::isPauseOnBattery() const
 {
     return d_ptr->pauseOnBattery;
+}
+
+
+const xmrig::CandidateConfig &xmrig::Config::candidate() const
+{
+    return d_ptr->candidate;
 }
 
 
@@ -243,6 +252,16 @@ bool xmrig::Config::read(const IJsonReader &reader, const char *fileName)
     d_ptr->dmi = reader.getBool(kDMI, d_ptr->dmi);
 #   endif
 
+    const auto &candidate = reader.getObject("block-candidates");
+    if (candidate.IsObject()) {
+        const char *rpc = Json::getString(candidate, "rpc");
+        if (!d_ptr->candidate.parseRpc(rpc ? rpc : "")) {
+            LOG_WARN("Invalid block-candidates RPC URL; alerts disabled");
+        }
+        d_ptr->candidate.setRefresh(Json::getUint(candidate, "refresh", 30));
+        d_ptr->candidate.setMaxStale(Json::getUint(candidate, "max-stale", 120));
+    }
+
     return true;
 }
 
@@ -303,6 +322,12 @@ void xmrig::Config::getJSON(rapidjson::Document &doc) const
     doc.AddMember(StringRef(kUserAgent),                m_userAgent.toJSON(), allocator);
     doc.AddMember(StringRef(kVerbose),                  Log::verbose(), allocator);
     doc.AddMember(StringRef(kWatch),                    m_watch, allocator);
+    Value candidates(kObjectType);
+    candidates.AddMember("rpc", Value(candidate().endpoint().c_str(), allocator), allocator);
+    candidates.AddMember("refresh", candidate().refreshSeconds(), allocator);
+    candidates.AddMember("max-stale", candidate().maxStaleSeconds(), allocator);
+    doc.AddMember("block-candidates", candidates, allocator);
+
     doc.AddMember(StringRef(kPauseOnBattery),           isPauseOnBattery(), allocator);
     doc.AddMember(StringRef(kPauseOnActive),            (d_ptr->idleTime == 0U || d_ptr->idleTime == kIdleTime) ? Value(isPauseOnActive()) : Value(d_ptr->idleTime), allocator);
 }

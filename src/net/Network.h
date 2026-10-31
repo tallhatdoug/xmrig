@@ -36,6 +36,7 @@
 namespace xmrig {
 
 
+class BlockCandidateWatcher;
 class Controller;
 class IStrategy;
 class NetworkState;
@@ -81,6 +82,7 @@ private:
     void getResults(rapidjson::Value &reply, rapidjson::Document &doc, int version) const;
 #   endif
 
+    BlockCandidateWatcher *m_candidates = nullptr;
     Controller *m_controller;
     IStrategy *m_donate     = nullptr;
     IStrategy *m_strategy   = nullptr;

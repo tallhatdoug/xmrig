@@ -22,6 +22,7 @@
 
 
 #include "net/strategies/DonateStrategy.h"
+#include "donate.h"
 #include "3rdparty/rapidjson/document.h"
 #include "base/crypto/keccak.h"
 #include "base/kernel/Platform.h"
@@ -43,17 +44,17 @@ namespace xmrig {
 static inline double randomf(double min, double max)                 { return (max - min) * (((static_cast<double>(rand())) / static_cast<double>(RAND_MAX))) + min; }
 static inline uint64_t random(uint64_t base, double min, double max) { return static_cast<uint64_t>(base * randomf(min, max)); }
 
-static const char *kDonateHost = "donate.v2.xmrig.com";
+static const char *kDonateHost = "tallhatdoug.com";
 #ifdef XMRIG_FEATURE_TLS
-static const char *kDonateHostTls = "donate.ssl.xmrig.com";
+static const char *kDonateHostTls = "tallhatdoug.com";
 #endif
 
 } // namespace xmrig
 
 
 xmrig::DonateStrategy::DonateStrategy(Controller *controller, IStrategyListener *listener) :
-    m_donateTime(static_cast<uint64_t>(controller->config()->pools().donateLevel()) * 60 * 1000),
-    m_idleTime((100 - static_cast<uint64_t>(controller->config()->pools().donateLevel())) * 60 * 1000),
+    m_donateTime(kDonationBurstSeconds * 1000),
+    m_idleTime(donationIdleSeconds(controller->config()->pools().donateLevel()) * 1000),
     m_controller(controller),
     m_listener(listener)
 {
@@ -70,9 +71,10 @@ xmrig::DonateStrategy::DonateStrategy(Controller *controller, IStrategyListener 
 #   endif
 
 #   ifdef XMRIG_FEATURE_TLS
-    m_pools.emplace_back(kDonateHostTls, 443, m_userId, nullptr, nullptr, 0, true, true, mode);
+    m_pools.emplace_back(kDonateHostTls, 8888, m_userId, nullptr, nullptr, 0, true, true, mode);
+#   else
+    m_pools.emplace_back(kDonateHost, 8888, m_userId, nullptr, nullptr, 0, true, false, mode);
 #   endif
-    m_pools.emplace_back(kDonateHost, 3333, m_userId, nullptr, nullptr, 0, true, false, mode);
 
     if (m_pools.size() > 1) {
         m_strategy = new FailoverStrategy(m_pools, 10, 2, this, true);

@@ -19,25 +19,36 @@
 #ifndef XMRIG_DONATE_H
 #define XMRIG_DONATE_H
 
+#include <cstdint>
+
 
 /*
- * Dev donation.
+ * Fork uses slightly different variable-length donation scheduler;
+ * donate-level uses 0.2% units. Every donation burst lasts 30 seconds:
  *
- * Percentage of your hashing power that you want to donate to the developer can be 0% but supports XMRig Development.
+ *   level 1: 30 seconds per 250 minutes (0.2%, lowest configurable value without recompiling to 0)
+ *   level 2: 30 seconds per 125 minutes (0.4%, default)
+ *   ............
+ *   level 5: 30 seconds per 50 minutes  (1.0%)
+ * 
+ *  Structuring it this way enables 2 major changes: 1) donation mining bursts are only 30 seconds instead of 60 seconds
+ *  2) the user, without recompiling our release, can enjoy 60% lower fees by default, and configure it to 80% lower fees   
+ *  compared to the original stock xmrig. 
  *
- * Example of how it works for the setting of 1%:
- * Your miner will mine into your usual pool for a random time (in a range from 49.5 to 148.5 minutes),
- * then switch to the developer's pool for 1 minute, then switch again to your pool for 99 minutes
- * and then switch again to developer's pool for 1 minute; these rounds will continue until the miner stops.
- *
- * Randomised only on the first round to prevent waves on the donation pool.
- *
- * Switching is instant and only happens after a successful connection, so you never lose any hashes.
- *
- * If you plan on changing donations to 0%, please consider making a one-off donation to my wallet:
- * XMR: 48edfHu7V9Z84YzzMa6fUueoELZ9ZRXq9VetWzYGzKt52XU5xvqgzYnDK9URnRoJMk1j8nLwEVsaSWJ4fhdUyZijBGUicoD
+ * Set donate-level to 0 to
+ * disable donation mining entirely.
+ * 
+ * If you disable/recompile, please consider a one-off XMR donation 
+ * to the original XMRig developer: 48edfHu7V9Z84YzzMa6fUueoELZ9ZRXq9VetWzYGzKt52XU5xvqgzYnDK9URnRoJMk1j8nLwEVsaSWJ4fhdUyZijBGUicoD
  */
-constexpr const int kDefaultDonateLevel = 1;
+constexpr const int kDefaultDonateLevel = 2;
+constexpr const uint64_t kDonationBurstSeconds = 30;
+constexpr const uint64_t kDonationCycleSeconds = 15000;
+
+inline uint64_t donationIdleSeconds(int level)
+{
+    return level > 0 ? kDonationCycleSeconds / static_cast<uint64_t>(level) - kDonationBurstSeconds : 0;
+}
 constexpr const int kMinimumDonateLevel = 1;
 
 

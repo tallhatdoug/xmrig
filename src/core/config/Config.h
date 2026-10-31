@@ -32,6 +32,7 @@
 namespace xmrig {
 
 
+class CandidateConfig;
 class ConfigPrivate;
 class CudaConfig;
 class IThread;
@@ -69,6 +70,7 @@ public:
     inline bool isPauseOnActive() const { return idleTime() > 0; }
 
     bool isPauseOnBattery() const;
+    const CandidateConfig &candidate() const;
     const CpuConfig &cpu() const;
     uint32_t idleTime() const;
 
