@@ -1,0 +1,117 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - master
+      - 'feature/**'
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x64
+            os: ubuntu-24.04
+            artifact: xmrig
+            package: linux-x64.tar.gz
+          - name: windows-x64
+            os: windows-2022
+            artifact: xmrig.exe
+            package: windows-x64.zip
+          - name: macos-x64
+            os: macos-15-intel
+            artifact: xmrig
+            package: macos-x64.tar.gz
+          - name: macos-arm64
+            os: macos-15
+            artifact: xmrig
+            package: macos-arm64.tar.gz
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            libuv1-dev \
+            libssl-dev \
+            libhwloc-dev
+
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        run: |
+          brew install cmake libuv openssl hwloc
+
+      - name: Install Windows dependencies
+        if: runner.os == 'Windows'
+        run: choco install cmake openssl hwloc
+
+      - name: Configure
+        shell: bash
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DWITH_CN_LITE=OFF \
+            -DWITH_CN_HEAVY=OFF \
+            -DWITH_CN_PICO=OFF \
+            -DWITH_CN_FEMTO=OFF \
+            -DWITH_ARGON2=OFF \
+            -DWITH_KAWPOW=OFF \
+            -DWITH_GHOSTRIDER=OFF \
+            -DWITH_OPENCL=OFF \
+            -DWITH_CUDA=OFF \
+            -DWITH_BENCHMARK=OFF
+
+      - name: Build
+        shell: bash
+        run: cmake --build build --config Release --parallel
+
+      - name: Check binary
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            test -f build/Release/${{ matrix.artifact }}
+          else
+            test -f build/${{ matrix.artifact }}
+          fi
+
+      - name: Package
+        shell: bash
+        run: |
+          mkdir -p dist
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            cp "build/Release/${{ matrix.artifact }}" dist/
+          else
+            cp "build/${{ matrix.artifact }}" dist/
+          fi
+          cp doc/FORK_FEATURES.md dist/
+          cd dist
+          if [[ "${{ matrix.package }}" == *.zip ]]; then
+            7z a "${{ matrix.package }}" .
+          else
+            tar -czf "${{ matrix.package }}" .
+          fi
+          sha256sum "${{ matrix.package }}" > "${{ matrix.package }}.sha256"
+          cat "${{ matrix.package }}.sha256"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: dist/*
+          if-no-files-found: error
