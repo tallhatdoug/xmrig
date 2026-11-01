@@ -94,28 +94,13 @@ jobs:
           $lines | Out-File -FilePath build-openssl.bat -Encoding ascii
           cmd /c build-openssl.bat
 
-      - name: Build Windows HWLOC
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          set -euxo pipefail
-          export HWLOC_PREFIX="$(cygpath -u '${{ runner.workspace }}/deps/hwloc')"
-          mkdir -p "$HWLOC_PREFIX/src" "$HWLOC_PREFIX/prefix"
-          cd "$HWLOC_PREFIX/src"
-          curl -fL -o hwloc.tar.gz https://download.open-mpi.org/release/hwloc/v2.12/hwloc-2.12.2.tar.gz
-          tar -xzf hwloc.tar.gz
-          cd hwloc-2.12.2
-          ./configure --prefix="$HWLOC_PREFIX/prefix" --disable-shared --enable-static --disable-cairo --disable-libxml2 --disable-pci --disable-opencl --disable-cuda --disable-nvml --disable-rsmi
-          make -j2
-          make install
-
       - name: Configure
         shell: bash
         run: |
           set -euxo pipefail
           if [[ "${{ runner.os }}" == "Windows" ]]; then
             export WS="$(cygpath -u '${{ runner.workspace }}')"
-            cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DUV_INCLUDE_DIR="$WS/deps/uv/prefix/include" -DUV_LIBRARY="$WS/deps/uv/prefix/lib/libuv.lib" -DOPENSSL_ROOT_DIR="$WS/deps/openssl/prefix" -DHWLOC_INCLUDE_DIR="$WS/deps/hwloc/prefix/include" -DHWLOC_LIBRARY="$WS/deps/hwloc/prefix/lib/hwloc.lib" -DWITH_CN_LITE=OFF -DWITH_CN_HEAVY=OFF -DWITH_CN_PICO=OFF -DWITH_CN_FEMTO=OFF -DWITH_ARGON2=OFF -DWITH_KAWPOW=OFF -DWITH_GHOSTRIDER=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF -DWITH_BENCHMARK=OFF
+            cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DUV_INCLUDE_DIR="$WS/deps/uv/prefix/include" -DUV_LIBRARY="$WS/deps/uv/prefix/lib/libuv.lib" -DOPENSSL_ROOT_DIR="$WS/deps/openssl/prefix" -DWITH_CN_LITE=OFF -DWITH_CN_HEAVY=OFF -DWITH_CN_PICO=OFF -DWITH_CN_FEMTO=OFF -DWITH_ARGON2=OFF -DWITH_KAWPOW=OFF -DWITH_GHOSTRIDER=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF -DWITH_BENCHMARK=OFF
           else
             cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DWITH_CN_LITE=OFF -DWITH_CN_HEAVY=OFF -DWITH_CN_PICO=OFF -DWITH_CN_FEMTO=OFF -DWITH_ARGON2=OFF -DWITH_KAWPOW=OFF -DWITH_GHOSTRIDER=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF -DWITH_BENCHMARK=OFF
           fi
