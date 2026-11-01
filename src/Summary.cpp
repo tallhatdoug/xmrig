@@ -171,10 +171,13 @@ static void print_memory(const Config *config)
 
 static void print_threads(const Config *config)
 {
-    Log::print(GREEN_BOLD(" * ") WHITE_BOLD("%-13s") WHITE_BOLD("%s%d%%"),
+    const int level = config->pools().donateLevel();
+    const double percent = level * 0.2;  // 0.2% per donation level
+
+    Log::print(GREEN_BOLD(" * ") WHITE_BOLD("%-13s") WHITE_BOLD("%s%.1f%%"),
                "DONATE",
-               config->pools().donateLevel() == 0 ? RED_BOLD_S : "",
-               config->pools().donateLevel()
+               level == 0 ? RED_BOLD_S : "",
+               percent
                );
 
 #   ifdef XMRIG_FEATURE_ASM
