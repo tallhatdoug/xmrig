@@ -1,0 +1,168 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - master
+      - 'feature/**'
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x64
+            os: ubuntu-24.04
+            artifact: xmrig
+            package: xmrig-linux-x64.tar.gz
+          - name: windows-x64
+            os: windows-2022
+            artifact: xmrig.exe
+            package: xmrig-windows-x64.zip
+          - name: macos-x64
+            os: macos-15-intel
+            artifact: xmrig
+            package: xmrig-macos-x64.tar.gz
+          - name: macos-arm64
+            os: macos-15
+            artifact: xmrig
+            package: xmrig-macos-arm64.tar.gz
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libuv1-dev libssl-dev libhwloc-dev
+
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        run: brew install cmake libuv openssl hwloc
+
+      - name: Install NASM on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install nasm -y
+          echo "C:\Program Files\NASM" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Build Windows libuv
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          export UV_PREFIX="$(cygpath -u '${{ runner.workspace }}/deps/uv')"
+          mkdir -p "$UV_PREFIX/src" "$UV_PREFIX/prefix"
+          cd "$UV_PREFIX/src"
+          curl -fL -o uv.tar.gz https://dist.libuv.org/dist/v1.51.0/libuv-v1.51.0.tar.gz
+          tar -xzf uv.tar.gz
+          cmake -S libuv-v1.51.0 -B uv-build -G "Visual Studio 17 2022" -A x64 -DCMAKE_INSTALL_PREFIX="$UV_PREFIX/prefix" -DLIBUV_BUILD_SHARED=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DBUILD_TESTING=OFF
+          cmake --build uv-build --config Release --target install
+
+      - name: Build Windows OpenSSL
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $deps = "${{ runner.workspace }}\deps\openssl"
+          New-Item -ItemType Directory -Force -Path "$deps\src", "$deps\prefix" | Out-Null
+          Set-Location "$deps\src"
+          curl.exe -fL -o openssl.tar.gz https://github.com/openssl/openssl/releases/download/openssl-3.5.2/openssl-3.5.2.tar.gz
+          tar -xzf openssl.tar.gz
+          Set-Location openssl-3.5.2
+          $vcvars = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          $perl = "C:\Strawberry\perl\bin\perl.exe"
+          $lines = @(
+            '@echo off',
+            'set PATH=C:\Program Files\NASM;C:\Windows\System32;C:\Windows',
+            "call `"$vcvars`"",
+            "`"$perl`" Configure VC-WIN64A-masm no-shared no-tests --prefix=`"$deps\prefix`" --openssldir=`"$deps\prefix`"",
+            'nmake',
+            'nmake install_sw'
+          )
+          $lines | Out-File -FilePath build-openssl.bat -Encoding ascii
+          cmd /c build-openssl.bat
+
+      - name: Configure
+        shell: bash
+        run: |
+          set -euxo pipefail
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            export WS="$(cygpath -u '${{ runner.workspace }}')"
+            cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DUV_INCLUDE_DIR="$WS/deps/uv/prefix/include" -DUV_LIBRARY="$WS/deps/uv/prefix/lib/libuv.lib" -DOPENSSL_ROOT_DIR="$WS/deps/openssl/prefix" -DWITH_CN_LITE=OFF -DWITH_CN_HEAVY=OFF -DWITH_CN_PICO=OFF -DWITH_CN_FEMTO=OFF -DWITH_ARGON2=OFF -DWITH_KAWPOW=OFF -DWITH_GHOSTRIDER=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF -DWITH_BENCHMARK=OFF
+          else
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DWITH_CN_LITE=OFF -DWITH_CN_HEAVY=OFF -DWITH_CN_PICO=OFF -DWITH_CN_FEMTO=OFF -DWITH_ARGON2=OFF -DWITH_KAWPOW=OFF -DWITH_GHOSTRIDER=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF -DWITH_BENCHMARK=OFF
+          fi
+
+      - name: Build
+        shell: bash
+        run: cmake --build build --config Release --parallel
+
+      - name: Package
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p dist package
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            test -f "build/Release/${{ matrix.artifact }}"
+            cp "build/Release/${{ matrix.artifact }}" dist/
+          else
+            test -f "build/${{ matrix.artifact }}"
+            cp "build/${{ matrix.artifact }}" dist/
+          fi
+          cp doc/FORK_FEATURES.md dist/
+          if [[ "${{ matrix.package }}" == *.zip ]]; then
+            (cd dist && 7z a "../package/${{ matrix.package }}" .)
+          else
+            tar -czf "package/${{ matrix.package }}" -C dist .
+          fi
+          (cd package && sha256sum "${{ matrix.package }}" > "${{ matrix.package }}.sha256" && ls -lh)
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.name }}
+          path: package/*
+          if-no-files-found: error
+
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.name }}-diagnostics
+          path: build.log
+          if-no-files-found: ignore
+
+  ci-summary:
+    name: ci-summary
+    runs-on: ubuntu-24.04
+    needs: build
+    if: always()
+    steps:
+      - name: Download diagnostics
+        uses: actions/download-artifact@v6
+        with:
+          pattern: '*-diagnostics'
+          path: diagnostics
+          merge-multiple: true
+
+      - name: Print all diagnostics
+        shell: bash
+        run: |
+          set +e
+          for file in $(find diagnostics -type f | sort); do
+            echo "================ $file ================"
+            cat "$file"
+            echo
+          done
