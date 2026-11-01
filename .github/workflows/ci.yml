@@ -91,27 +91,31 @@ jobs:
 
       - name: Build Windows OpenSSL
         if: runner.os == 'Windows'
-        shell: cmd
+        shell: pwsh
         run: |
-          set DEPS=${{ runner.workspace }}\deps\openssl
-          mkdir %DEPS%\src %DEPS%\prefix 2>nul
-          cd /d %DEPS%\src
+          $deps = "${{ runner.workspace }}\deps\openssl"
+          New-Item -ItemType Directory -Force -Path "$deps\src", "$deps\prefix" | Out-Null
+          Set-Location "$deps\src"
 
-          curl -fL -o openssl.tar.gz ^
+          curl.exe -fL -o openssl.tar.gz `
             https://github.com/openssl/openssl/releases/download/openssl-3.5.2/openssl-3.5.2.tar.gz
           tar -xzf openssl.tar.gz
-          cd openssl-3.5.2
+          Set-Location openssl-3.5.2
 
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          set PATH=C:\Program Files\NASM;%PATH%
+          $vcvars = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          $perl = "C:\Strawberry\perl\bin\perl.exe"
 
-          C:\Strawberry\perl\bin\perl.exe Configure VC-WIN64A-masm ^
-            no-shared no-tests ^
-            --prefix=%DEPS%\prefix ^
-            --openssldir=%DEPS%\prefix
+          $buildScript = @"
+@echo off
+set PATH=C:\Program Files\NASM;C:\Windows\System32;C:\Windows
+call "$vcvars"
+"$perl" Configure VC-WIN64A-masm no-shared no-tests --prefix="$deps\prefix" --openssldir="$deps\prefix"
+nmake
+nmake install_sw
+"@
 
-          nmake
-          nmake install_sw
+          $buildScript | Out-File -FilePath build-openssl.bat -Encoding ascii
+          cmd /c build-openssl.bat
 
       - name: Build Windows HWLOC
         if: runner.os == 'Windows'
