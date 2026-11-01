@@ -68,7 +68,7 @@ jobs:
           cd "$UV_PREFIX/src"
           curl -fL -o uv.tar.gz https://dist.libuv.org/dist/v1.51.0/libuv-v1.51.0.tar.gz
           tar -xzf uv.tar.gz
-          cmake -S libuv-v1.51.0 -B uv-build -G "Visual Studio 17 2022" -A x64 -DCMAKE_INSTALL_PREFIX="$UV_PREFIX/prefix" -DBUILD_TESTING=OFF
+          cmake -S libuv-v1.51.0 -B uv-build -G "Visual Studio 17 2022" -A x64 -DCMAKE_INSTALL_PREFIX="$UV_PREFIX/prefix" -DLIBUV_BUILD_SHARED=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DBUILD_TESTING=OFF
           cmake --build uv-build --config Release --target install
 
       - name: Build Windows OpenSSL
