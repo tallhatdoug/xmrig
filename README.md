@@ -49,7 +49,7 @@ This is nice because even though you are using a fork, you know the xmrig base i
 - **CUDA** for NVIDIA GPUs via external [CUDA plugin](https://github.com/xmrig/xmrig-cuda).
 
 ## Download
-* **[Binary releases](https://github.com/xmrig/xmrig/releases)**
+* **[Binary releases](https://github.com/tallhatdoug/xmrig/releases)**
 * **[Build from source](https://xmrig.com/docs/miner/build)**
 
 ## Usage
