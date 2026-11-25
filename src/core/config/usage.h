@@ -72,8 +72,11 @@ static inline const std::string &usage()
     u += "  -r, --retries=N               number of times to retry before switch to backup server (default: 5)\n";
     u += "  -R, --retry-pause=N           time to pause between retries (default: 5)\n";
     u += "      --user-agent              set custom user-agent string for pool\n";
-    u += "      --donate-level=N          donate level, default 1%% (1 minute in 100 minutes)\n";
+    u += "      --donate-level=N          donate level in 0.2%% units, default 2 (0.4%%, 30-second bursts)\n";
     u += "      --donate-over-proxy=N     control donate over xmrig-proxy feature\n";
+    u += "      --candidate-rpc=URL       Monero get_info URL for block-candidate alerts\n";
+    u += "      --candidate-refresh=N     candidate RPC refresh seconds (default: 30)\n";
+    u += "      --candidate-max-stale=N   maximum cache age seconds (default: 120)\n";
 
     u += "\nCPU backend:\n";
 

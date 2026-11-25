@@ -56,6 +56,7 @@ set(HEADERS
     src/App.h
     src/core/config/Config_default.h
     src/core/config/Config_platform.h
+    src/core/config/CandidateConfig.h
     src/core/config/Config.h
     src/core/config/ConfigTransform.h
     src/core/config/usage.h
@@ -65,6 +66,7 @@ set(HEADERS
     src/net/interfaces/IJobResultListener.h
     src/net/JobResult.h
     src/net/JobResults.h
+    src/net/BlockCandidateWatcher.h
     src/net/Network.h
     src/net/strategies/DonateStrategy.h
     src/Summary.h
@@ -106,12 +108,14 @@ set(SOURCES
     "${SOURCES_BASE_HTTP}"
     "${SOURCES_BACKEND}"
     src/App.cpp
+    src/core/config/CandidateConfig.cpp
     src/core/config/Config.cpp
     src/core/config/ConfigTransform.cpp
     src/core/Controller.cpp
     src/core/Miner.cpp
     src/core/Taskbar.cpp
     src/net/JobResults.cpp
+    src/net/BlockCandidateWatcher.cpp
     src/net/Network.cpp
     src/net/strategies/DonateStrategy.cpp
     src/Summary.cpp

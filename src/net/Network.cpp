@@ -22,6 +22,7 @@
 #endif
 
 #include "net/Network.h"
+#include "net/BlockCandidateWatcher.h"
 #include "3rdparty/rapidjson/document.h"
 #include "backend/common/Tags.h"
 #include "base/io/log/Log.h"
@@ -68,6 +69,8 @@ xmrig::Network::Network(Controller *controller) :
 #   endif
 
     m_state = new NetworkState(this);
+    m_candidates = new BlockCandidateWatcher(controller->config()->candidate());
+    m_candidates->start();
 
     const Pools &pools = controller->config()->pools();
     m_strategy = pools.createStrategy(m_state);
@@ -87,6 +90,7 @@ xmrig::Network::~Network()
     delete m_timer;
     delete m_donate;
     delete m_strategy;
+    delete m_candidates;
     delete m_state;
 }
 
@@ -149,6 +153,9 @@ void xmrig::Network::onActive(IStrategy *strategy, IClient *client)
 
 void xmrig::Network::onConfigChanged(Config *config, Config *previousConfig)
 {
+    delete m_candidates;
+    m_candidates = new BlockCandidateWatcher(config->candidate());
+    m_candidates->start();
     if (config->pools() == previousConfig->pools() || !config->pools().active()) {
         return;
     }
@@ -170,11 +177,13 @@ void xmrig::Network::onJob(IStrategy *strategy, IClient *client, const Job &job,
     }
 
     setJob(client, job, m_donate == strategy);
+    m_candidates->onJobHeight(job.height());
 }
 
 
 void xmrig::Network::onJobResult(const JobResult &result)
 {
+    m_candidates->check(result);
     if (result.index == 1 && m_donate) {
         m_donate->submit(result);
         return;
@@ -304,6 +313,7 @@ void xmrig::Network::tick()
     const uint64_t now = Chrono::steadyMSecs();
 
     m_strategy->tick(now);
+    m_candidates->tick(now);
 
     if (m_donate) {
         m_donate->tick(now);

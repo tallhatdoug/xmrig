@@ -150,6 +150,15 @@ void xmrig::ConfigTransform::transform(rapidjson::Document &doc, int key, const 
     case IConfig::PauseOnBatteryKey: /* --pause-on-battery */
         return set(doc, Config::kPauseOnBattery, true);
 
+    case IConfig::CandidateRpcKey:
+        return set(doc, "block-candidates", "rpc", arg);
+
+    case IConfig::CandidateRefreshKey:
+        return set(doc, "block-candidates", "refresh", static_cast<uint64_t>(strtol(arg, nullptr, 10)));
+
+    case IConfig::CandidateStaleKey:
+        return set(doc, "block-candidates", "max-stale", static_cast<uint64_t>(strtol(arg, nullptr, 10)));
+
     case IConfig::PauseOnActiveKey: /* --pause-on-active */
         return set(doc, Config::kPauseOnActive, static_cast<uint64_t>(strtol(arg, nullptr, 10)));
 

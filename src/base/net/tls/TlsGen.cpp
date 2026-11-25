@@ -121,7 +121,8 @@ bool xmrig::TlsGen::generate_x509(const char *commonName)
     X509_gmtime_adj(X509_getm_notBefore(m_x509), 0);
     X509_gmtime_adj(X509_getm_notAfter(m_x509), 315360000L);
 
-    auto name = X509_NAME_new();
+
+ auto name = X509_NAME_new();
     X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, reinterpret_cast<const uint8_t *>(commonName), -1, -1, 0);
 
     X509_set_subject_name(m_x509, name);
