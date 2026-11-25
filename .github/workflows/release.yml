@@ -90,13 +90,29 @@ jobs:
           $lines | Out-File -FilePath build-openssl.bat -Encoding ascii
           cmd /c build-openssl.bat
 
+      - name: Build Windows hwloc
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          # xmrig 6.27.0 stopped bundling hwloc for MSVC builds. Build the copy that
+          # xmrig 6.26.0 shipped, with the same CMake file xmrig used for it.
+          HWLOC_DIR="$(cygpath -u '${{ runner.workspace }}/deps/hwloc')"
+          mkdir -p "$HWLOC_DIR"
+          cd "$HWLOC_DIR"
+          git -c advice.detachedHead=false clone --depth 1 --branch v6.26.0 https://github.com/xmrig/xmrig.git xmrig-6.26.0
+          test "$(git -C xmrig-6.26.0 rev-parse HEAD)" = b2ca72480c58d197e18c885d9fc1a0c8d517e60a
+          cmake -S xmrig-6.26.0/src/3rdparty/hwloc -B build -G "Visual Studio 17 2022" -A x64
+          cmake --build build --config Release
+          test -f build/Release/hwloc.lib
+
       - name: Configure
         shell: bash
         run: |
           set -euxo pipefail
           if [[ "${{ runner.os }}" == "Windows" ]]; then
             export WS="$(cygpath -u '${{ runner.workspace }}')"
-            cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DUV_INCLUDE_DIR="$WS/deps/uv/prefix/include" -DUV_LIBRARY="$WS/deps/uv/prefix/lib/libuv.lib" -DOPENSSL_ROOT_DIR="$WS/deps/openssl/prefix" -DWITH_CN_LITE=OFF -DWITH_CN_HEAVY=OFF -DWITH_CN_PICO=OFF -DWITH_CN_FEMTO=OFF -DWITH_ARGON2=OFF -DWITH_KAWPOW=OFF -DWITH_GHOSTRIDER=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF -DWITH_BENCHMARK=OFF
+            cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DUV_INCLUDE_DIR="$WS/deps/uv/prefix/include" -DUV_LIBRARY="$WS/deps/uv/prefix/lib/libuv.lib" -DOPENSSL_ROOT_DIR="$WS/deps/openssl/prefix" -DWITH_CN_LITE=OFF -DWITH_CN_HEAVY=OFF -DWITH_CN_PICO=OFF -DWITH_CN_FEMTO=OFF -DWITH_ARGON2=OFF -DWITH_KAWPOW=OFF -DWITH_GHOSTRIDER=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF -DWITH_BENCHMARK=OFF -DHWLOC_INCLUDE_DIR="$WS/deps/hwloc/xmrig-6.26.0/src/3rdparty/hwloc/include" -DHWLOC_LIBRARY="$WS/deps/hwloc/build/Release/hwloc.lib"
           else
             cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DWITH_CN_LITE=OFF -DWITH_CN_HEAVY=OFF -DWITH_CN_PICO=OFF -DWITH_CN_FEMTO=OFF -DWITH_ARGON2=OFF -DWITH_KAWPOW=OFF -DWITH_GHOSTRIDER=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF -DWITH_BENCHMARK=OFF
           fi
